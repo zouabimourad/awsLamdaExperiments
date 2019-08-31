@@ -8,7 +8,7 @@ var ses = new aws.SES();
 
 exports.handlerSteg = function (event, context, callback) {
 
-    let dtsEmail;
+    let dstEmail;
 
     secretMgr.getStegSecret("prod/stegInvoice").then((stegSecrets) => {
 
@@ -16,22 +16,22 @@ exports.handlerSteg = function (event, context, callback) {
 
         let login = sercrets["STEG_LOGIN"];
         let password = sercrets["STEG_PASSWORD"];
-        dtsEmail = sercrets["STEG_DST_EMAIL"];
+        dstEmail = sercrets["STEG_DST_EMAIL"];
 
         return crawlerSteg.checkNewInvoice(login, password);
 
     }).then((amount) => {
 
-        if (amount.indexOf("0,000") < 0) {
+        if (amount !== "0") {
             var params = {
                 Destination: {
-                    ToAddresses: [dtsEmail]
+                    ToAddresses: [dstEmail]
                 },
                 Message: {
                     Subject: {Data: "STEG Invoice"},
                     Body: {Text: {Data: "A new STEG Invoice, amount : " + amount}},
                 },
-                Source: dtsEmail
+                Source: dstEmail
             };
 
             return ses.sendEmail(params).promise();
@@ -52,14 +52,14 @@ exports.handlerSteg = function (event, context, callback) {
 
 exports.handlerSonede = function (event, context, callback) {
 
-    let dtsEmail;
+    let dstEmail;
 
     secretMgr.getStegSecret("prod/sonedeInvoice").then((stegSecrets) => {
 
         let secrets = JSON.parse(stegSecrets);
         let login = secrets["SONEDE_LOGIN"];
         let password = secrets["SONEDE_PASSWORD"];
-        dtsEmail = secrets["STEG_DST_EMAIL"];
+        dstEmail = secrets["STEG_DST_EMAIL"];
 
         let district = secrets["SONEDE_DISTRICT"];
         let police = secrets["SONEDE_POLICE"];
@@ -73,17 +73,16 @@ exports.handlerSonede = function (event, context, callback) {
         if (newFacture) {
             let params = {
                 Destination: {
-                    ToAddresses: [dtsEmail]
+                    ToAddresses: [dstEmail]
                 },
                 Message: {
                     Subject: {Data: "SONEDE Invoice"},
                     Body: {Text: {Data: "A New SONEDE Invoice"}}
                 },
-                Source: dtsEmail
+                Source: dstEmail
             };
 
             return ses.sendEmail(params).promise();
-
         } else {
             return newFacture;
         }
