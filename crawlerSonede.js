@@ -13,8 +13,7 @@ function checkNewInvoice(login, password, district, police, tournee, ordre) {
             'Sec-Fetch-User': ' ?1',
             'Upgrade-Insecure-Requests': '1',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
-            'Referer': 'https://www.sonede.com.tn/eservices/session.php',
-            'Content-Length': '131'
+            'Referer': 'https://www.sonede.com.tn/eservices/session.php'
         }
     };
 
@@ -42,6 +41,7 @@ function checkNewInvoice(login, password, district, police, tournee, ordre) {
             return axiosInstance.post(baseUrl + 'siteSonede/servlet/consultAccount', params, {headers: {Cookie: cookies}})
 
         }).then(function (response) {
+
             return !(response.data.indexOf("Vous n'avez pas de facture") > 0);
         });
 }
