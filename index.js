@@ -8,35 +8,36 @@ var ses = new aws.SES();
 
 exports.handlerSteg = function (event, context, callback) {
 
-    let dstEmail;
-
     secretMgr.getStegSecret("prod/stegInvoice").then((stegSecrets) => {
 
         let sercrets = JSON.parse(stegSecrets);
 
         let login = sercrets["STEG_LOGIN"];
         let password = sercrets["STEG_PASSWORD"];
-        dstEmail = sercrets["STEG_DST_EMAIL"];
+        let dstEmail = sercrets["STEG_DST_EMAIL"];
 
-        return crawlerSteg.checkNewInvoice(login, password);
+        return crawlerSteg.checkNewInvoice(login, password)
+            .then(response => {
+                return {"amount": response, "dstEmail": dstEmail};
+            })
 
-    }).then((amount) => {
+    }).then((response) => {
 
-        if (amount !== "0") {
+        if (response.amount.indexOf("0,000") < 0) {
             var params = {
+                Source: response.dstEmail,
                 Destination: {
-                    ToAddresses: [dstEmail]
+                    ToAddresses: [response.dstEmail]
                 },
                 Message: {
                     Subject: {Data: "STEG Invoice"},
-                    Body: {Text: {Data: "A new STEG Invoice, amount : " + amount}},
-                },
-                Source: dstEmail
+                    Body: {Text: {Data: "A new STEG Invoice, amount : " + response.amount}},
+                }
             };
 
             return ses.sendEmail(params).promise();
         } else {
-            return amount;
+            return response.amount;
         }
 
     }).then(() => {
@@ -52,39 +53,42 @@ exports.handlerSteg = function (event, context, callback) {
 
 exports.handlerSonede = function (event, context, callback) {
 
-    let dstEmail;
-
     secretMgr.getStegSecret("prod/sonedeInvoice").then((stegSecrets) => {
 
         let secrets = JSON.parse(stegSecrets);
         let login = secrets["SONEDE_LOGIN"];
         let password = secrets["SONEDE_PASSWORD"];
-        dstEmail = secrets["STEG_DST_EMAIL"];
+        let dstEmail = secrets["STEG_DST_EMAIL"];
 
         let district = secrets["SONEDE_DISTRICT"];
         let police = secrets["SONEDE_POLICE"];
         let tournee = secrets["SONEDE_TOURNEE"];
         let ordre = secrets["SONEDE_ORDRE"];
 
-        return crawlerSonede.checkNewInvoice(login, password, district, police, tournee, ordre);
+        return crawlerSonede.checkNewInvoice(login, password, district, police, tournee, ordre)
+            .then(response => {
+                return {"newFacture": response, "dstEmail": dstEmail};
+            })
 
-    }).then((newFacture) => {
+    }).then((response) => {
 
-        if (newFacture) {
+        if (response.newFacture) {
+
             let params = {
+                Source: response.dstEmail,
                 Destination: {
-                    ToAddresses: [dstEmail]
+                    ToAddresses: [response.dstEmail]
                 },
                 Message: {
                     Subject: {Data: "SONEDE Invoice"},
                     Body: {Text: {Data: "A New SONEDE Invoice"}}
-                },
-                Source: dstEmail
+                }
             };
 
             return ses.sendEmail(params).promise();
+
         } else {
-            return newFacture;
+            return response.newFacture;
         }
 
     }).then(() => {
