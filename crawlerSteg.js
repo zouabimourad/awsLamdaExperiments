@@ -41,7 +41,3 @@ function checkNewInvoice(login, password) {
 module.exports = {
     checkNewInvoice: checkNewInvoice
 };
-
-// checkNewInvoice("", "").then((res) => {
-//     console.log(res);
-// }).catch(e=>console.log(e));

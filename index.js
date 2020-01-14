@@ -2,9 +2,9 @@ const crawlerSteg = require('./crawlerSteg.js');
 const crawlerSonede = require('./crawlerSonede.js');
 const secretMgr = require('./secretMgr.js');
 
-var aws = require('aws-sdk');
+const aws = require('aws-sdk');
 
-var ses = new aws.SES();
+const ses = new aws.SES();
 
 exports.handlerSteg = function (event, context, callback) {
 
@@ -23,8 +23,8 @@ exports.handlerSteg = function (event, context, callback) {
 
     }).then((response) => {
 
-        if (response.amount.indexOf("0,000") < 0) {
-            var params = {
+        if (response.amount.indexOf("0,000") < 0 && response.amount !== "0") {
+            let params = {
                 Source: response.dstEmail,
                 Destination: {
                     ToAddresses: [response.dstEmail]
@@ -45,8 +45,9 @@ exports.handlerSteg = function (event, context, callback) {
         callback(null, "done");
 
     }).catch((error) => {
+
         context.fail(error);
-        console.log(error);
+
     });
 
 };
@@ -96,8 +97,9 @@ exports.handlerSonede = function (event, context, callback) {
         callback(null, "done");
 
     }).catch((error) => {
+
         context.fail(error);
-        console.log(error);
+
     });
 
 };
